@@ -6,6 +6,7 @@ ENV PYTHONUNBUFFERED=1
 ENV POETRY_VERSION=1.8.3
 ENV DEBIAN_FRONTEND=noninteractive
 ENV POETRY_NO_INTERACTION=1
+ENV POETRY_CACHERE_DIR=/tmp/poetry-cache
 
 # Install Google Chrome
 RUN apt-get update -y && \
@@ -30,18 +31,15 @@ RUN apt-get update -y \
 WORKDIR $WORKSPACE_ROOT
 
 # Install poetry 
-RUN curl -sSL https://install.python-poetry.org | python3 - --version $POETRY_VERSION && \
-    ln -s /root/.local/bin/poetry /usr/local/bin/poetry \
+RUN pip install poetry==$POETRY_VERSION
 
 # copy the dependancies to install
-COPY poetry.lock pyproject.toml $WORKSPACE_ROOT
+COPY poetry.lock pyproject.toml ./
 
 # Install the dependencies and clear cache
 RUN poetry config virtualenvs.create false && \
    poetry install --no-interaction --no-root --no-cache --without dev && \
-   rm -rf ~/.cache/pypoetry/cache/ && \
-   rm -rf ~/.cache/pypoetry/artifacts/
+   rm -rf $POETRY_CACHERE_DIR
 
 # Copy the application to the workspace
-COPY . $WORKSPACE_ROOT
 
