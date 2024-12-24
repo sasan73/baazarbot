@@ -42,4 +42,4 @@ RUN poetry config virtualenvs.create false && \
    rm -rf $POETRY_CACHERE_DIR
 
 # Copy the application to the workspace
-
+COPY . .

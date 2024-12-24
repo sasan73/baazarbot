@@ -15,6 +15,26 @@ build-docker:
 	@echo "Building Docker image..."
 	docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
 
+zenml-init:
+	@echo "initializing zenml in root directory..."
+	poetry run zenml init
+
+zenml-up: zenml-init
+	@echo "Spinning Zenml up..."
+	poetry run zenml login --local
+
+# Run etl pipeline
+run-digital-data-etl: build-docker zenml-init-docker zenml-up-docker
+	@echo "Running Digital Data ETL..."
+	docker run --rm \
+		--network host \
+		--shm-size=2g \
+		--env-file .env \
+		${IMAGE_NAME} \
+		poetry run main \
+		--run-etl \
+		--etl-config-filename="digital_data_etl.yaml"
+
 # clean up container and image
 clean:
 	docker rm -f ${IMAGE_NAME} || true
