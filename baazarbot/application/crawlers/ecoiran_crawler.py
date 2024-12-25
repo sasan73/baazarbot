@@ -6,6 +6,7 @@ import time
 from loguru import logger
 
 from baazarbot.application.crawlers.base import BasePaginationCrawler
+from baazarbot.domain.types import DataCategory
 from baazarbot.domain.documents import ArticleDocument
 from baazarbot.infrastructure.db.mongo import start_mongo_client
 
@@ -50,7 +51,7 @@ class EcoiranCrawler(BasePaginationCrawler):
             platform = parsed_url.netloc
 
             instance = self.model(
-                name="ecoiran",
+                name=DataCategory.ARTICLES,
                 content=content,
                 platform=platform,
                 link=article_link
