@@ -7,5 +7,5 @@ __all__=[
     "clean_documents",
     "load_to_vectore_db",
     "get_data_warehouse",
-    "chunk_and_embed"
+    "chunk_and_embed",
 ]
