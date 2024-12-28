@@ -4,6 +4,7 @@ from beanie import Document
 
 from zenml import get_step_context, step
 
+from baazarbot.application.preprocessing import CleaningDispatcher
 from baazarbot.domain.cleaned_documents import CleanedDocument
 
 @step

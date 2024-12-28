@@ -1,3 +1,5 @@
+from typing import List
+
 from beanie import Document
 
 from baazarbot.infrastructure.db.mongo import start_mongo_client
@@ -19,7 +21,7 @@ from .embedding_data_handlers import (
 
 class CleaningHandlerFactory():
 
-    @static_method
+    @staticmethod
     def create_handler(data_category: DataCategory) -> CleaningDataHandler:
         if data_category == DataCategory.ARTICLES:
             return CleaningArticleHandler()
@@ -44,7 +46,7 @@ class CleaningDispatcher():
 
 
 class ChunkingHandlerFactory():
-    @static_method
+    @staticmethod
     def create_handler(data_category: DataCategory) -> ChunkingDataHandler:
         if data_category == DataCategory.ARTICLES:
             return ChunkingArticleHandler()
@@ -65,7 +67,7 @@ class ChunkingDispatcher():
             data_category=data_category,
             num=len(chunk_models),
         )
-        
+
         return chunk_models
 
 
