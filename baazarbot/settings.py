@@ -31,6 +31,11 @@ class Settings(BaseSettings):
     QDRANT_CLOUD_URL: str = "str"
     QDRANT_APIKEY: str | None = None
 
+    # RAG
+    TEXT_EMBEDDING_MODEL_ID: str = "sentence-transformers/all-MiniLM-L6-v2"
+    RAG_MODEL_DEVICE: str = "cpu"
+
+
     # @classmethod
     # def load_settings(cls) -> "Settings":
     #     """
