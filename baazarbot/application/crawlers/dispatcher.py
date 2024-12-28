@@ -22,7 +22,7 @@ class CrawlerDispatcher:
         dispatcher = cls()
 
         return dispatcher
-    
+
     def register_ecoiran(self):
         """Register the Ecoiran crawler"""
         url = "ecoiran.com"
@@ -30,7 +30,7 @@ class CrawlerDispatcher:
         self.register(url, crawler)
 
         return self
-        
+
     def regirster_majlis_rules(self):
         url = "rc.majlis.ir"
         crawler = MajlisRulesCrawler()
@@ -50,14 +50,14 @@ class CrawlerDispatcher:
         domain = urlparse(url).netloc
 
         self._crawlers[r"https://(www\.)?{}/*".format(re.escape(domain))] = crawler
-    
+
     def get_crawler(self, url: str) -> BaseCrawler:
         """Get the crawler for the given domain."""
-        
+
         for pattern, crawler in self._crawlers.items():
             if re.match(pattern, url):
                 return crawler
-            
+
             else:
                 logger.warning(f"No crawler found for {url}. Defaulting to CustomArticleCrawler.")
                 
