@@ -24,7 +24,7 @@ zenml-up: zenml-init
 	poetry run zenml login --local
 
 # Run etl pipeline
-run-digital-data-etl: build-docker zenml-init-docker zenml-up-docker
+run-digital-data-etl: build-docker
 	@echo "Running Digital Data ETL..."
 	docker run --rm \
 		--network host \

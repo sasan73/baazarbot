@@ -19,7 +19,7 @@ class EcoiranCrawler(BasePaginationCrawler):
         self.BASE_URL = base_url        
 
 
-    async def extract(self, link: str, **kwargs) -> None:
+    async def extract(self, link: str, **kwargs) -> tuple:
         await start_mongo_client()
         logger.info("Started mongoDB client!")
         instances = []
@@ -81,7 +81,6 @@ class EcoiranCrawler(BasePaginationCrawler):
 
 
     def _get_content_sections(self, article_link: str) -> tuple:
-        
         response = requests.get(article_link)
         soup = BeautifulSoup(response.text, "html.parser")
         # get article header
