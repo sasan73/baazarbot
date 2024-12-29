@@ -1,6 +1,7 @@
 from typing import List
 
 from beanie import Document
+from loguru import logger
 
 from baazarbot.infrastructure.db.mongo import start_mongo_client
 from baazarbot.domain.base import VectorBaseDocument
@@ -32,7 +33,7 @@ class CleaningDispatcher():
     factory = CleaningHandlerFactory()
     
     @classmethod
-    async def dispatch(cls, document: Document) -> VectorBaseDocument:
+    def dispatch(cls, document: Document) -> VectorBaseDocument:
         data_category = document.name
         handler = cls.factory.create_handler(data_category)
         clean_model = handler.clean(document)
@@ -54,7 +55,7 @@ class ChunkingHandlerFactory():
             raise ValueError("{data_category} is an unsupported data type.")
 
 class ChunkingDispatcher():
-    factory: ChunkingHandlerFactory()
+    factory = ChunkingHandlerFactory()
     
     @classmethod
     def dispatch(cls, data_model: VectorBaseDocument) -> List[VectorBaseDocument]:
@@ -80,7 +81,7 @@ class EmbeddingHandlerFactory:
             raise ValueError("{data_category} is an unsupported data type.")
 
 class EmbeddingDispatcher():
-    factory: EmbeddingHandlerFactory()
+    factory = EmbeddingHandlerFactory()
     
     @classmethod
     def dispatch(
@@ -99,7 +100,7 @@ class EmbeddingDispatcher():
         ), "Data models must be of the same category."
         handler = cls.factory.create_handler(data_category)
 
-        embedded_chunk_models = handler.embed_batch(data_model)
+        embedded_chunk_model = handler.embed_batch(data_model)
         
         if not isinstance(data_model, list):
             embedded_chunk_model = embedded_chunk_models[0]
