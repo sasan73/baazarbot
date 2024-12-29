@@ -1,5 +1,5 @@
 from loguru import logger
-from typing import List
+from typing import List, Annotated
 from beanie import Document
 
 from zenml import get_step_context, step
@@ -24,7 +24,7 @@ def _get_metadata(documents: List[CleanedDocument]) -> dict:
     metadata = {
         "num_documents": len(documents),
     }
-    for document in documetns:
+    for document in documents:
         category = document.get_category()
         if category not in metadata:
             metadata[category] = {}
