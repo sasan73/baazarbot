@@ -23,6 +23,7 @@ ruff = "^0.8.3"
 pre-commit = "^4.0.1"
 pytest = "^8.3.4"
 jupyterlab = "^4.3.4"
+vllm = "^0.6.0"
 
 [build-system]
 requires = ["poetry-core"]
