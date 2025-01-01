@@ -5,7 +5,7 @@ from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.fake import FakeListLLM
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
+from langchain_huggingface import HuggingFaceEndpoint
 from loguru import logger
 
 from baazarbot import domain
@@ -120,12 +120,19 @@ class DatasetGeneator(ABC):
     def _load_model(mock: bool = False) -> "Model":
         if mock:
             return FakeListLLM(responses=[constants.get_mocked_response(cls.dataset_type)])
-        return AutoModelForCaulsalLM(
-            settings.DATASET_GENERATION_MODEL_ID,
-            device_map=auto,
-            load_in_4bit=True
+        hf_model_parameters = {
+            device_map="auto",
+            load_in_4bit=True,
+        }
+        return HuggingFaceEndpoint(
+            repo_id=settings.DATASET_GENERATION_MODEL_ID,
+            task="text_generation",
+            max_new_tokens=2000,
+            do_sample=False,
+            model_kwargs=hf_model_parameters,
         )
-    
+
+
     @staticmethod
     def _to_langchain(
             prompt: GenerateDatasetSamplesPrompt,

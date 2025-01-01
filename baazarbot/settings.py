@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     TEXT_EMBEDDING_MODEL_ID: str = "sentence-transformers/all-MiniLM-L6-v2"
     RAG_MODEL_DEVICE: str = "cpu"
 
+    # DATASET Generation
+    DATASET_GENERATION_MODEL_ID: str = ""
 
     # @classmethod
     # def load_settings(cls) -> "Settings":
