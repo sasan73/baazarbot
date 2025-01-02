@@ -1,3 +1,4 @@
+from typing_extensions import Annotated
 from zenml import step, get_step_context
 
 from baazarbot.application.dataset.generation import get_dataset_generator
@@ -7,8 +8,8 @@ from baazarbot.domain.prompt import GenerateDatasetSamplesPrompt
 
 @step
 def create_prompts(
-    documents: list[CleanedDocument],
-    dataset_type: DatasetType,
+    documents: Annotated[list[CleanedDocument], "cleaned_documetns"],
+    dataset_type: Annotated[DatasetType, "dataset_type"],
 ) -> dict[DataCategory, list[GenerateDatasetSamplesPrompt]]:
     generator = get_dataset_generator(dataset_type)
     prompts = generator.get_prompts(documents)
