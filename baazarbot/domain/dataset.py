@@ -66,6 +66,16 @@ class InstructTrainTestSplit(TrainTestSplit):
     class Config:
         category = DataCategory.INSTRUCT_DATASET
 
+
+class PreferenceDatasetSample(VectorBaseDocument):
+    instruction: str
+    rejected: str
+    chosen: str
+
+    class Config:
+        category = DataCategory.PREFERENCE_DATASET_SAMPLES
+
+
 class PreferenceDataset(VectorBaseDocument):
     category: DataCategory
     samples: list[PreferenceDatasetSample]
