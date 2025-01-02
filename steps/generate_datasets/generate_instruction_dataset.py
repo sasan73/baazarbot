@@ -10,7 +10,7 @@ from baazarbot.domain.types import DataCategory
 
 
 @step
-def generate_intruction_dataset(
+def generate_instruction_dataset(
     prompts: Annotated[dict[DataCategory, list[GenerateDatasetSamplesPrompt]], "prompts"],
     test_split_size: Annotated[float, "test_split_size"],
     mock: Annotated[bool, "mock_generation"] = False,
