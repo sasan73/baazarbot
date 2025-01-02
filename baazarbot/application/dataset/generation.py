@@ -8,6 +8,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_huggingface import HuggingFaceEndpoint
 from loguru import logger
 
+
 from baazarbot import domain
 from baazarbot.domain.dataset import DatasetType, TrainTestSplit, InstructDatasetSample, PreferenceDatasetSample
 from baazarbot.domain.prompt import GenerateDatasetSamplesPrompt, Prompt
@@ -20,7 +21,7 @@ class DatasetGeneator(ABC):
     tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID)
     dataset_type: DatasetType | None=None
 
-    system_prompt_template = """You are a helpful assistnat who generate persian {dataset_format} based on the given context. \
+    system_prompt_template = """You are a helpful assistnat who generate Persian {dataset_format} based on the given context. \
         Provide your response in JSON format."""
     
     prompt_template_str: str | None = None
@@ -48,7 +49,7 @@ class DatasetGeneator(ABC):
         grouped_docs = documetns.group_by_category()
         for category, category_docs in grouped_docs.items():
             prompts[category] = [cls.get_prompt(doc) for doc in category_docs]
-        return grouped_prompts            
+        return grouped_prompts
 
     @classmethod
     def get_prompt(cls, document: CleanedDocument) -> GenerateDatasetSamplesPrompt:
@@ -108,10 +109,10 @@ class DatasetGeneator(ABC):
                 category=category
             )
 
-            datasets[category] = flattened_category_dataset
+            datasets[category] = dataset
 
         logger.info(f"Generated {len(dataset.samples)} samples for category '{category}'.")
-        processed_dataset = cls.post_process_datasets(dataset, test_size=test_size)
+        processed_dataset = cls.post_process_datasets(datasets, test_size=test_size)
 
         return processed_dataset
 
@@ -155,5 +156,57 @@ class DatasetGeneator(ABC):
 
     @classmethod
     @abstractmethod
-    def post_process_datasets(cls, datasets: dict) -> TrainTestSplit:
+    def post_process_datasets(cls, datasets: dict, test_size: float) -> TrainTestSplit:
         pass
+
+
+class InstructionDatasetGeneration(DatasetGenerator):
+    dataset_type = DatasetType.INSTRUCTION
+    
+    prompt_template_str = """Based on the following extract, generate five instruction-answer pairs in Persian(Farsi). Each instruction \
+must ask to write about a specific topic contained in the context. Each answer \
+must provide a relevant paragraph based on the information found in the \
+context. Only use concepts from the context to generate the instructions. \
+Instructions must never explicitly mention a context, a system, a course, or an extract. \
+Instructions must be self-contained and general. \
+Answers must imitate the writing style of the context. \
+
+Structure the answer in JSON format, ready to be loaded in Python by json.loads(), as a list of objects.
+Do not add any extra characters and provide your response in JSON format with the following structure:
+[
+    {"instruction": "...", "answer": "..."},
+    ...
+]
+
+Extract:
+{extract}
+    """
+
+        @classmethod
+        def post_process_datasets(cls, datasets: dict, test_size: float) -> InstructTrainTestSplit:
+            
+            category_train = {}
+            category_test = {}
+
+            for category, category_dataset in datasets.items():
+                
+                train_samples, test_samples = train_test_split(category_dataset.samples, test_size=test_size, shuffle=True)
+                
+                trainset = build_dataset(dataset_type=cls.dataset_type, samples=train_samples, data_category=category)
+                testset = build_dataset(dataset_type=cls.dataset_type, samples=test_samples, data_category=category)
+
+                category_train[category] = trainset
+                category_test[category] = testset
+
+            return InstructTrainTestSplit(
+                train = category_train,
+                test = category_test,
+                test_size = test_size,
+            )
+
+
+def get_dataset_generator(dataset_type: DatasetType) -> type[DatasetGenerator]:
+    if dataset_type == DatasetType.INSTRUCTION:
+        return InstructionDatasetGenerator
+    else:
+        raise ValueError(f"Invalid dataset type: {dataset_type}")
