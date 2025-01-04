@@ -12,7 +12,7 @@ from pipelines import digital_data_etl, feature_engineering, generate_datasets
 @click.option("--run-feature-engineering", is_flag=True, default=False, help="Option to run feature engineering.")
 @click.option("--export_settings", is_flag=True, default=False, help="Option to export settings to ZenML secrets.")
 @click.option("--etl-config-filename", default="digital_data_etl.yml", help="ETL configuration filename.")
-@click.option("--run_generate_instruct_datasets", is_flag=True, default=False, help="Option to run generate instruction dataset.")
+@click.option("--run-generate-instruct-datasets", is_flag=True, default=False, help="Option to run generate instruction dataset.")
 def main(
     no_cache: bool,
     run_etl: bool,
@@ -25,7 +25,8 @@ def main(
     assert(
         no_cache or
         run_etl or
-        run_feature_engineering
+        run_feature_engineering or
+        run_generate_instruct_datasets
     ), "Please specify at least one option."
 
     pipeline_args = {
