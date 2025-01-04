@@ -1,7 +1,7 @@
-from ABC import abc, abstractmethod
+from abc import ABC, abstractmethod
 
-from transformers import AutoTokenizer, AutoModelForCaulsalLM
-from langchain_core.exceptions import OutputParserException
+from transformers import AutoTokenizer
+# from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.fake import FakeListLLM
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
@@ -10,14 +10,25 @@ from loguru import logger
 
 
 from baazarbot import domain
-from baazarbot.domain.dataset import DatasetType, TrainTestSplit, InstructDatasetSample, PreferenceDatasetSample
+from baazarbot.domain.dataset import (
+    DatasetType,
+    TrainTestSplit,
+    InstructTrainTestSplit,
+    InstructDatasetSample, 
+    PreferenceDatasetSample,
+)
 from baazarbot.domain.prompt import GenerateDatasetSamplesPrompt, Prompt
 from baazarbot.domain.cleaned_documents import CleanedDocument
 from baazarbot.domain.type import DataCategory
 from baazarbot.domain import utils
 from baazarbot.settings import settings
 
-class DatasetGeneator(ABC):
+from . import constants
+from .utils import split_dataset_samples
+from .output_parsers import ListPydanticOutputParser
+
+
+class DatasetGenerator(ABC):
     tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID)
     dataset_type: DatasetType | None=None
 
@@ -31,12 +42,12 @@ class DatasetGeneator(ABC):
         assert cls.dataset_type is not None, "Dataset type must be set before calling get_system_prompt()"
 
         dataset_format = "instruction-answer pairs" if cls.dataset_type == DatasetType.INSTRUCTION else "instruction-answer triples"
-        
+
         input_variables = {
             "dataset_format": dataset_format
         }
-        
-        content = system_prompt.format(**input_variables)
+
+        content = cls.system_prompt_template.format(**input_variables)
         return Prompt(
             template=cls.system_prompt_template,
             input_variables=input_variables,
@@ -44,18 +55,18 @@ class DatasetGeneator(ABC):
         )
     
     @classmethod 
-    def get_prompts(cls, documents: list[CleanedDocument]) -> dict[DataCategory, list[GenerateDatasetSamplesPrompt]]
+    def get_prompts(cls, documents: list[CleanedDocument]) -> dict[DataCategory, list[GenerateDatasetSamplesPrompt]]:
         grouped_prompts = {}
-        grouped_docs = documetns.group_by_category()
+        grouped_docs = documents.group_by_category()
         for category, category_docs in grouped_docs.items():
-            prompts[category] = [cls.get_prompt(doc) for doc in category_docs]
+            grouped_prompts[category] = [cls.get_prompt(doc) for doc in category_docs]
         return grouped_prompts
 
     @classmethod
     def get_prompt(cls, document: CleanedDocument) -> GenerateDatasetSamplesPrompt:
-        
+
         data_category = document.get_category()
-        
+
         prompt_template = PromptTemplate.from_template(
             template=cls.prompt_template_str,
             template_format="jinja2",
@@ -97,11 +108,11 @@ class DatasetGeneator(ABC):
             messages = [cls._to_langchain(prompt) for prompt in category_sample_prompts]
             
             flattened_category_dataset = []
-            for grouped_prompts in utils.misc.batch(category_sample_prompts, size=10):
+            for grouped_prompts in utils.misc.batch(messages, size=10):
                 dataset_samples = chain.batch(grouped_prompts)
 
                 for dataset_sample in dataset_samples:
-                    flattened_category_dataset.extend(dataset_objects)
+                    flattened_category_dataset.extend(dataset_sample)
 
             dataset = domain.dataset.build_dataset(
                 dataset_type=cls.dataset_type,
@@ -117,13 +128,13 @@ class DatasetGeneator(ABC):
         return processed_dataset
 
 
-    @staticmethod
-    def _load_model(mock: bool = False) -> "Model":
+    @classmethod
+    def _load_model(cls, mock: bool = False) -> "Model":
         if mock:
             return FakeListLLM(responses=[constants.get_mocked_response(cls.dataset_type)])
         hf_model_parameters = {
-            device_map="auto",
-            load_in_4bit=True,
+            "device_map": "auto",
+            "load_in_4bit": True,
         }
         return HuggingFaceEndpoint(
             repo_id=settings.DATASET_GENERATION_MODEL_ID,
@@ -134,13 +145,14 @@ class DatasetGeneator(ABC):
         )
 
 
-    @staticmethod
+    @classmethod
     def _to_langchain(
+            cls,
             prompt: GenerateDatasetSamplesPrompt,
         ) -> list[BaseMessage]:
             messages = [
                 SystemMessage(content=cls.get_system_prompt().content),
-                UserMessage(content=prompt.content)
+                HumanMessage(content=prompt.content)
             ]
 
             return messages
@@ -150,7 +162,7 @@ class DatasetGeneator(ABC):
         cls,
     ) -> (type[InstructDatasetSample] | type[PreferenceDatasetSample]):
         return (
-            InstructDatasetSample if dataset_type == DatasetType.INSTRUCTION 
+            InstructDatasetSample if cls.dataset_type == DatasetType.INSTRUCTION 
             else PreferenceDatasetSample
         )
 
@@ -160,7 +172,7 @@ class DatasetGeneator(ABC):
         pass
 
 
-class InstructionDatasetGeneration(DatasetGenerator):
+class InstructionDatasetGenerator(DatasetGenerator):
     dataset_type = DatasetType.INSTRUCTION
     
     prompt_template_str = """Based on the following extract, generate five instruction-answer pairs in Persian(Farsi). Each instruction \
@@ -182,27 +194,10 @@ Extract:
 {extract}
     """
 
-        @classmethod
-        def post_process_datasets(cls, datasets: dict, test_size: float) -> InstructTrainTestSplit:
-            
-            category_train = {}
-            category_test = {}
-
-            for category, category_dataset in datasets.items():
-                
-                train_samples, test_samples = train_test_split(category_dataset.samples, test_size=test_size, shuffle=True)
-                
-                trainset = build_dataset(dataset_type=cls.dataset_type, samples=train_samples, data_category=category)
-                testset = build_dataset(dataset_type=cls.dataset_type, samples=test_samples, data_category=category)
-
-                category_train[category] = trainset
-                category_test[category] = testset
-
-            return InstructTrainTestSplit(
-                train = category_train,
-                test = category_test,
-                test_size = test_size,
-            )
+    @classmethod
+    def post_process_datasets(cls, datasets: dict, test_size: float) -> InstructTrainTestSplit:
+        
+        return split_dataset_samples(datasets=datasets, test_size=test_size, dataset_type=cls.dataset_type)
 
 
 def get_dataset_generator(dataset_type: DatasetType) -> type[DatasetGenerator]:

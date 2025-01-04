@@ -1,8 +1,8 @@
 from sklearn.model_selection import train_test_split
 
-from baazarbot.domain.dataset import TrainTestSplit
+from baazarbot.domain.dataset import DatasetType, TrainTestSplit, InstructTrainTestSplit, build_dataset
 
-def split_dataset_samples(dataset: InstructDataset | PreferenceDataset, test_size: float) -> TrainTestSplit:
+def split_dataset_samples(datasets: dict, test_size: float, dataset_type: DatasetType) -> TrainTestSplit:
     category_train = {}
     category_test = {}
 
@@ -10,8 +10,8 @@ def split_dataset_samples(dataset: InstructDataset | PreferenceDataset, test_siz
         
         train_samples, test_samples = train_test_split(category_dataset.samples, test_size=test_size, shuffle=True)
         
-        trainset = build_dataset(dataset_type=cls.dataset_type, samples=train_samples, data_category=category)
-        testset = build_dataset(dataset_type=cls.dataset_type, samples=test_samples, data_category=category)
+        trainset = build_dataset(dataset_type=dataset_type, samples=train_samples, data_category=category)
+        testset = build_dataset(dataset_type=dataset_type, samples=test_samples, data_category=category)
 
         category_train[category] = trainset
         category_test[category] = testset
