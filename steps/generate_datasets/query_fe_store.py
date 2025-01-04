@@ -6,7 +6,7 @@ from zenml import step
 from baazarbot.domain.cleaned_documents import CleanedDocument, CleanedArticleDocument
 
 @step
-def query_fe_store() -> Annotated[list[CleanedDocument], "queried_cleaned_documents"]:
+def query_feature_store() -> Annotated[list[CleanedDocument], "queried_cleaned_documents"]:
     logger.info("Querying feature store.")
 
     articles = __fetch_articles()

@@ -30,7 +30,7 @@ from .output_parsers import ListPydanticOutputParser
 
 
 class DatasetGenerator(ABC):
-    tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID, access_token=settings.HUGGINGFACEHUB_API_TOKEN)
+    tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID, token=settings.HUGGINGFACEHUB_API_TOKEN)
     dataset_type: DatasetType | None=None
 
     system_prompt_template = """You are a helpful assistnat who generate Persian {dataset_format} based on the given context. \
