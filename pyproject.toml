@@ -19,6 +19,7 @@ numpy = "^1.26.4"
 langchain = "^0.3.13"
 bitsandbytes = "^0.45.0"
 scikit-learn = "^1.6.0"
+langchain-huggingface = "^0.1.2"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.8.3"
