@@ -23,6 +23,11 @@ zenml-up: zenml-init
 	@echo "Spinning Zenml up..."
 	poetry run zenml login --local
 
+run-generate-instruct-datasets: install-dependencies
+	poetry run python tools/run.py \
+	--run-generate-instruct-datasets \
+	--no-cache
+
 # Run etl pipeline
 run-digital-data-etl: build-docker
 	@echo "Running Digital Data ETL..."
