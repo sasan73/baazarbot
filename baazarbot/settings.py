@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     RAG_MODEL_DEVICE: str = "cpu"
 
     # DATASET Generation
-    DATASET_GENERATION_MODEL_ID: str = ""
+    DATASET_GENERATION_MODEL_ID: str = "meta-llama/Llama-3.1-8B-Instruct"
 
     # @classmethod
     # def load_settings(cls) -> "Settings":
