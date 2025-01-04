@@ -13,10 +13,10 @@ def push_to_huggingface(
 ) -> None:
     assert dataset_id is not None, "Dataset id must be provided for pushing to Huggingface"
     assert (
-        settings.HUGGINGFACE_ACCESS_TOKEN is not None
+        settings.HUGGINGFACEHUB_API_TOKEN is not None
     ), "Huggingface access token must be provided for pushing to Huggingface"
 
     logger.info(f"Pushing dataset {dataset_id} to Hugging Face.")
 
     huggingface_dataset = dataset.to_huggingface(flatten=True)
-    huggingface_dataset.push_to_hub(dataset_id, token=settings.HUGGINGFACE_ACCESS_TOKEN)
+    huggingface_dataset.push_to_hub(dataset_id, token=settings.HUGGINGFACEHUB_API_TOKEN)
