@@ -1,12 +1,12 @@
 import os
 from abc import ABC, abstractmethod
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig
 # from langchain_core.exceptions import OutputParserException
 from langchain_core.language_models.fake import FakeListLLM
+from langchain_huggingface import HuggingFacePipeline
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from langchain_core.prompts import PromptTemplate
-from langchain_huggingface import HuggingFaceEndpoint
 from loguru import logger
 
 
@@ -30,7 +30,7 @@ from .output_parsers import ListPydanticOutputParser
 
 
 class DatasetGenerator(ABC):
-    tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID, token=settings.HUGGINGFACEHUB_API_TOKEN)
+    tokenizer = AutoTokenizer.from_pretrained(settings.DATASET_GENERATION_MODEL_ID, device_map="auto", token=settings.HUGGINGFACEHUB_API_TOKEN)
     dataset_type: DatasetType | None=None
 
     system_prompt_template = """You are a helpful assistnat who generate Persian {dataset_format} based on the given context. \
@@ -55,10 +55,11 @@ class DatasetGenerator(ABC):
             content=content,
         )
     
-    @classmethod 
+    @classmethod
     def get_prompts(cls, documents: list[CleanedDocument]) -> dict[DataCategory, list[GenerateDatasetSamplesPrompt]]:
+        assert len(documents) > 0, "cleaned documents should be a non-empty list."
         grouped_prompts = {}
-        grouped_docs = documents.group_by_category()
+        grouped_docs = CleanedDocument.group_by_category(documents)
         for category, category_docs in grouped_docs.items():
             grouped_prompts[category] = [cls.get_prompt(doc) for doc in category_docs]
         return grouped_prompts
@@ -70,7 +71,6 @@ class DatasetGenerator(ABC):
 
         prompt_template = PromptTemplate.from_template(
             template=cls.prompt_template_str,
-            template_format="jinja2",
         )
         input_variables = {
             "extract": document.content,
@@ -130,21 +130,22 @@ class DatasetGenerator(ABC):
 
 
     @classmethod
-    def _load_model(cls, mock: bool = False) -> "Model":
+    def _load_model(cls, mock: bool = False):
         if mock:
             return FakeListLLM(responses=[constants.get_mocked_response(cls.dataset_type)])
-        hf_model_parameters = {
-            "device_map": "auto",
-            "load_in_4bit": True,
-        }
-        return HuggingFaceEndpoint(
-            repo_id=settings.DATASET_GENERATION_MODEL_ID,
-            task="text_generation",
-            max_new_tokens=2000,
-            do_sample=False,
-            model_kwargs=hf_model_parameters,
-            huggingfacehub_api_token=settings.HUGGINGFACEHUB_API_TOKEN,
+
+        quantization_config = BitsAndBytesConfig(load_in_4bit=True)
+        hf_model = AutoModelForCausalLM.from_pretrained(
+            settings.DATASET_GENERATION_MODEL_ID,
+            torch_dtype="auto",
+            device_map="auto",
+            quantization_config=quantization_config,
+            token=settings.HUGGINGFACEHUB_API_TOKEN,
         )
+        pipe = pipeline(
+            "text-generation", model=hf_model, tokenizer=cls.tokenizer, max_new_tokens=2000
+        )
+        return HuggingFacePipeline(pipeline=pipe)
 
 
     @classmethod
@@ -177,7 +178,7 @@ class DatasetGenerator(ABC):
 class InstructionDatasetGenerator(DatasetGenerator):
     dataset_type = DatasetType.INSTRUCTION
     
-    prompt_template_str = """Based on the following extract, generate five instruction-answer pairs in Persian(Farsi). Each instruction \
+    prompt_template_str = """Based on the following extract, generate two instruction-answer pairs in Persian(Farsi). Each instruction \
 must ask to write about a specific topic contained in the context. Each answer \
 must provide a relevant paragraph based on the information found in the \
 context. Only use concepts from the context to generate the instructions. \
@@ -188,7 +189,7 @@ Answers must imitate the writing style of the context. \
 Structure the answer in JSON format, ready to be loaded in Python by json.loads(), as a list of objects.
 Do not add any extra characters and provide your response in JSON format with the following structure:
 [
-    {"instruction": "...", "answer": "..."},
+    {{"instruction": "...", "answer": "..."}},
     ...
 ]
 

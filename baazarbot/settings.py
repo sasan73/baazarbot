@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # --- Otherwise, default values values work fine. ---
 
     # MongoDB database
-    DATABASE_HOST: str = "mongodb://llm_engineering:llm_engineering@127.0.0.1:27017"
+    DATABASE_HOST: str = "mongodb://baazarbot:baazarbot@127.0.0.1:27017"
     DATABASE_NAME: str = "baazarbot"
 
     # Qdrant vector database

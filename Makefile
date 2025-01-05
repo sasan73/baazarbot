@@ -23,7 +23,7 @@ zenml-up: zenml-init
 	@echo "Spinning Zenml up..."
 	poetry run zenml login --local
 
-run-generate-instruct-datasets: install-dependencies
+run-generate-instruct-datasets: install-dependancies
 	poetry run python tools/run.py \
 	--run-generate-instruct-datasets \
 	--no-cache

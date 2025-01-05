@@ -11,7 +11,7 @@ from pipelines import digital_data_etl, feature_engineering, generate_datasets
 @click.option("--run-etl", is_flag=True, default=False, help="Option to run digital data ETL.")
 @click.option("--run-feature-engineering", is_flag=True, default=False, help="Option to run feature engineering.")
 @click.option("--export_settings", is_flag=True, default=False, help="Option to export settings to ZenML secrets.")
-@click.option("--etl-config-filename", default="digital_data_etl.yml", help="ETL configuration filename.")
+@click.option("--etl-config-filename", default="digital_data_etl.yaml", help="ETL configuration filename.")
 @click.option("--run-generate-instruct-datasets", is_flag=True, default=False, help="Option to run generate instruction dataset.")
 def main(
     no_cache: bool,

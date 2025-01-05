@@ -11,7 +11,7 @@ from baazarbot.domain.types import DataCategory
 def create_prompts(
     documents: Annotated[list[CleanedDocument], "cleaned_documetns"],
     dataset_type: Annotated[DatasetType, "dataset_type"],
-) -> dict[DataCategory, list[GenerateDatasetSamplesPrompt]]:
+) -> Annotated[dict[DataCategory, list[GenerateDatasetSamplesPrompt]], "prompts"]:
     generator = get_dataset_generator(dataset_type)
     prompts = generator.get_prompts(documents)
 
@@ -27,7 +27,7 @@ def get_prompt_metadata(category_prompts: dict) -> dict:
         if category not in metadata:
             metadata[category] = {}
         metadata[category]["number_of_prompts"] = len(prompts)
-        token_lengths.append(prompts.num_tokens)
+        token_lengths.extend([prompt.num_tokens for prompt in prompts])
     metadata[category]["average_prompt_token_length"] = sum(token_lengths) / len(token_lengths)
 
     return metadata
