@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
 
     # Huggingface API
-    HUGGINGFACE_ACCESS_TOKEN: str | None = None
+    HUGGINGFACEHUB_API_TOKEN: str | None = None
 
     # Comet ML (during training)
     COMET_API_KEY: str | None = None
@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # --- Otherwise, default values values work fine. ---
 
     # MongoDB database
-    DATABASE_HOST: str = "mongodb://llm_engineering:llm_engineering@127.0.0.1:27017"
+    DATABASE_HOST: str = "mongodb://baazarbot:baazarbot@127.0.0.1:27017"
     DATABASE_NAME: str = "baazarbot"
 
     # Qdrant vector database
@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     TEXT_EMBEDDING_MODEL_ID: str = "sentence-transformers/all-MiniLM-L6-v2"
     RAG_MODEL_DEVICE: str = "cpu"
 
+    # DATASET Generation
+    DATASET_GENERATION_MODEL_ID: str = "meta-llama/Llama-3.1-8B-Instruct"
 
     # @classmethod
     # def load_settings(cls) -> "Settings":
